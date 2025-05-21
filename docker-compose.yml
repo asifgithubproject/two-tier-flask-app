@@ -47,4 +47,4 @@ services:
       start_period: 30s
 
 networks:
-  two-tier-tier-flask-app-network:
+  two-tier-flask-app-network:
