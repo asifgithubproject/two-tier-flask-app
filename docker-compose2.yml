@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mysql:
+    user: "${UID}:${GID}" 
+    image: mysql:5.7
+    container_name: database_container
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: default_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    volumes:
+      - ./myvolume:/var/lib/mysql
+      - ./message.sql:/docker-entrypoint-initdb.d/message.sql  
+    networks:
+      - two-tier-flask-app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  flask-app:
+    image: asifdevops09/two-tier-flask-app-image-backend:latest
+    container_name: container1
+    ports:
+      - "5000:5000"
+    environment:
+      MYSQL_HOST: database_container
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DB: default_db
+    depends_on:
+      - mysql
+    networks:
+      - two-tier-flask-app-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  two-tier-flask-app-network:
